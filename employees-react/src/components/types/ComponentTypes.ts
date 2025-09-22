@@ -5,3 +5,5 @@ export type Employee = {
     address: string;
     phone: string;
 }
+
+export type EmployeeNoId = Omit<Employee, 'id'>;

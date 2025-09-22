@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { Employee } from './types/ComponentTypes';
+import React, { useState } from 'react';
+import type { Employee, EmployeeNoId } from './types/ComponentTypes';
 
 
 export function EmployeeApp() {
@@ -20,12 +20,23 @@ export function EmployeeApp() {
         setTitle(newTitle!);
     }
 
+    function addEmployee(newEmployee: EmployeeNoId) {
+        console.log(newEmployee);
+        setEmployees(prevEmployees => [
+            ...prevEmployees,
+            {
+                ...newEmployee,
+                id: Math.max(...prevEmployees.map(emp => emp.id)) + 1
+            }
+        ])
+    }
+
     return (
         <div className='container'>
             <div className='table-wrapper'>
                 <Header title={title} onUpdateTitle={updateTitle} onOpenAddModal={() => setIsAddModalOpen(true)} />
                 <EmployeeList employees={employees} />
-                <AddEmployeeModel isOpen={isAddModalOpen} onCloseAddModal={() => setIsAddModalOpen(false)} />
+                <AddEmployeeModel isOpen={isAddModalOpen} onCloseAddModal={() => setIsAddModalOpen(false)}  onAddEmployee={addEmployee}/>
             </div>
         </div>
     )
@@ -99,7 +110,35 @@ function EmployeeItem({ employee }: { employee: Employee }) {
     )
 }
 
-function AddEmployeeModel({ isOpen, onCloseAddModal }: { isOpen: boolean, onCloseAddModal: () => void }) {
+function AddEmployeeModel({ isOpen, onCloseAddModal, onAddEmployee }: { isOpen: boolean, onCloseAddModal: () => void, onAddEmployee: (newEmployee: EmployeeNoId) => void }) {
+
+    const [formData, setformData] = useState({
+        name: '',
+        email: '',
+        address: '',
+        phone: ''
+    })
+
+    function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+        const { name, value } = e.target;
+        setformData(prevState => ({
+            ...prevState,
+            [name]: value
+        }))
+    }
+
+    function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+        
+        e.preventDefault();
+        onAddEmployee(formData);
+        onCloseAddModal();
+        setformData({
+            name: '',
+            email: '',
+            address: '',
+            phone: ''
+        })
+    }
     if (!isOpen) {
         return null;
     } else {
@@ -108,10 +147,32 @@ function AddEmployeeModel({ isOpen, onCloseAddModal }: { isOpen: boolean, onClos
                 <div id="addEmployeeModal" className="modal fade show">
                     <div className="modal-dialog">
                         <div className="modal-content">
-                            <form>
+                            <form onSubmit={handleSubmit}>
                                 <div className="modal-header">
                                     <h4 className="modal-title">Add Employee</h4>
                                     <button onClick={onCloseAddModal} type="button" className="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                </div>
+                                <div className="modal-body">
+                                    <div className="form-group">
+                                        <label>Name</label>
+                                        <input type="text" className="form-control" name='name' value={formData.name} onChange={handleChange} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Email</label>
+                                        <input type="email" className="form-control" name='email' value={formData.email} onChange={handleChange} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Address</label>
+                                        <textarea className="form-control" name='address' value={formData.address} onChange={handleChange} required></textarea>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Phone</label>
+                                        <input type="text" className="form-control" name='phone' value={formData.phone} onChange={handleChange} required />
+                                    </div>
+                                </div>
+                                <div className="modal-footer">
+                                    <button type="button" className="btn btn-default">Cancel</button>
+                                    <button type="submit" className="btn btn-success">Submit</button>
                                 </div>
                             </form>
                         </div>
